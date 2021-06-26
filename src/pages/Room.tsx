@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useParams } from 'react-router';
 import { useHistory } from 'react-router-dom'
+import cx from 'classnames'
 
 import logoImg from '../assets/images/logo.svg'
 import { Button } from '../components/Button';
@@ -20,7 +21,7 @@ type RoomParams = {
 export const Room = () => {
   const history = useHistory()
   const params = useParams<RoomParams>()
-  const { user } = useAuth()
+  const { user, signInWithGoogle } = useAuth()
   const [newQuestion, setNewQuestion] = useState('')
 
   const roomId = params.id
@@ -56,12 +57,16 @@ export const Room = () => {
   }
 
   async function handleLikeQuestion(questionId: string, likeId: string | undefined) {
-    if (likeId) {
-      await database.ref(`rooms/${roomId}/questions/${questionId}/likes/${likeId}`).remove()
+    if (user) {
+      if (likeId) {
+        await database.ref(`rooms/${roomId}/questions/${questionId}/likes/${likeId}`).remove()
+      } else {
+        await database.ref(`rooms/${roomId}/questions/${questionId}/likes`).push({
+          authorId: user?.id
+        })
+      }
     } else {
-      await database.ref(`rooms/${roomId}/questions/${questionId}/likes`).push({
-        authorId: user?.id
-      })
+      signInWithGoogle()
     }
   }
 
@@ -92,22 +97,25 @@ export const Room = () => {
             ) : (
               <span>
                 Para enviar uma pergunta,{" "}
-                <button>faça seu login</button>
+                <button onClick={signInWithGoogle}>faça seu login</button>
               </span>
             )}
             <Button disabled={!user} type="submit">Enviar pergunta</Button>
           </div>
         </form>
         <div className="question-list">
-          {questions.map(({ id, author, content, likeCount, likeId }) =>
+          {questions.map(({ id, author, content, likeCount, likeId, isAnswered, isHighligthted, likeUid }) =>
             <Question
               key={id}
               author={author}
               content={content}
+              isAnswered={isAnswered}
+              isHighligthted={isHighligthted}
             >
               <button
-                className={`like-button ${likeId ? 'liked' : ''}`}
+                className={cx('like-button', { liked: (likeId && !isAnswered) || (likeUid && likeUid === user?.id) })}
                 type="button"
+                disabled={isAnswered}
                 aria-label="Marcar como gostei"
                 onClick={() => handleLikeQuestion(id, likeId)}
               >

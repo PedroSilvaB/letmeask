@@ -27,7 +27,8 @@ type QuestionType = {
   isAnswered: boolean,
   createAt: Date,
   likeCount: number,
-  likeId: string | undefined
+  likeId: string | undefined,
+  likeUid: string | undefined
 }
 
 export const useRoom = (roomId: string) => {
@@ -42,11 +43,13 @@ export const useRoom = (roomId: string) => {
       const databaseRoom = room.val()
       const firebaseQuestions: FirebaseQuestions = databaseRoom.questions ?? {}
       const parsedQuestions = Object.entries(firebaseQuestions).map(([key, value]) => {
+
         return {
           id: key,
           ...value,
           likeCount: Object.values(value.likes ?? {}).length,
-          likeId: Object.entries(value.likes ?? {}).find(([key, { authorId }]) => authorId === user?.id)?.[0]
+          likeId: Object.entries(value.likes ?? {}).find(([key, { authorId }]) => authorId === user?.id)?.[0],
+          likeUid: Object.entries(value.likes ?? {}).find(([key, { authorId }]) => authorId === user?.id)?.[1]?.authorId
         }
       })
       setTitle(databaseRoom.title)
