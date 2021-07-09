@@ -21,12 +21,14 @@ type RoomParams = {
 export const Room = () => {
   const history = useHistory()
   const params = useParams<RoomParams>()
-  const { user, signInWithGoogle } = useAuth()
+  const { user, signInWithGoogle, loading } = useAuth()
   const [newQuestion, setNewQuestion] = useState('')
-
   const roomId = params.id
+  const { title, questions, closedRoom } = useRoom(roomId)
 
-  const { title, questions } = useRoom(roomId)
+  if (!loading && closedRoom) {
+    history.replace("/")
+  }
 
 
   async function handleSendQuestion(event: FormEvent) {

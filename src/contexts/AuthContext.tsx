@@ -11,12 +11,15 @@ type UseData = {
 }
 type AuthContextData = {
   user: UseData | undefined,
+  loading: boolean,
   signInWithGoogle: () => Promise<void>
 }
 export const AuthContext = createContext({} as AuthContextData)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UseData>()
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
@@ -31,6 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           avatar: photoURL
         })
       }
+      setLoading(false)
     })
     return () => {
       unsubscribe()
@@ -52,8 +56,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })
     }
   }
+
+  if (loading) {
+    return <div>Carregando...</div>
+  }
   return (
-    <AuthContext.Provider value={{ user, signInWithGoogle }}>
+    <AuthContext.Provider value={{ user, signInWithGoogle, loading }}>
       {children}
     </AuthContext.Provider>
   )

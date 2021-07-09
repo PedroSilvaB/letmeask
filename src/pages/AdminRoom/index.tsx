@@ -14,6 +14,8 @@ import { useRoom } from '../../hooks/useRoom';
 
 import "../../styles/room.scss"
 import { database } from '../../services/firebase';
+import useAuth from '../../hooks/useAuth';
+import { useEffect } from 'react';
 
 type RoomParams = {
   id: string
@@ -22,11 +24,22 @@ type RoomParams = {
 export const AdminRoom = () => {
   const history = useHistory()
   const params = useParams<RoomParams>()
-  //const { user } = useAuth()
+  const { user, loading } = useAuth()
 
   const roomId = params.id
 
-  const { title, questions } = useRoom(roomId)
+  const { title, questions, closedRoom, authorIdRoom } = useRoom(roomId)
+
+  if (!loading && closedRoom) {
+    history.replace("/")
+  }
+  useEffect(() => {
+    if (!loading && !user) {
+
+      history.replace("/")
+    }
+
+  }, [history, loading, user, authorIdRoom])
 
   async function handleDeleteQuestion(questionId: string) {
     if (window.confirm('Tem certeza que vôce deseja excluir essa pergunta?')) {
